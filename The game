@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Potato Z: Thunder God Edition</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Courier New', Courier, monospace; color: white; user-select: none; touch-action: none; }
+        #rotate { display: none; position: fixed; inset: 0; background: #000; z-index: 999; justify-content: center; align-items: center; }
+        @media screen and (orientation: portrait) { #rotate { display: flex; } }
+        
+        /* MAIN MENU STYLES */
+        #main-menu { position: fixed; inset: 0; background: radial-gradient(circle, #1a1a2e, #000); z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #main-menu h1 { font-size: 48px; color: #f1c40f; text-shadow: 0 0 20px #f1c40f; margin-bottom: 30px; }
+        .menu-btn { padding: 15px 50px; background: #f1c40f; border: none; border-radius: 8px; font-weight: bold; font-size: 20px; cursor: pointer; box-shadow: 0 0 20px rgba(241, 196, 15, 0.5); transition: 0.3s; }
+        .menu-btn:hover { transform: scale(1.1); background: #fff; }
+
+        #fs-btn { position: absolute; top: 10px; right: 10px; z-index: 1000; background: #f1c40f; border: none; padding: 10px; font-weight: bold; border-radius: 4px; color: #000; cursor: pointer; }
+        #hud { position: absolute; top: 10px; left: 10px; z-index: 50; pointer-events: none; display: none; }
+        #wave-hud { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 15px #f1c40f; z-index: 50; text-align: center; display: none; }
+        #kill-hud { position: absolute; top: 15px; right: 80px; font-size: 14px; color: #f04; text-align: right; text-shadow: 0 0 10px #f04; display: none; }
+        #xp-bar { width: 150px; height: 8px; background: #222; border: 1px solid #0ff; box-shadow: 0 0 10px #0ff; }
+        #xp-fill { height: 100%; background: #0ff; width: 0%; box-shadow: 0 0 15px #0ff; }
+        #hp-bar { width: 120px; height: 10px; background: #300; border: 1px solid #f04; margin-top: 4px; box-shadow: 0 0 10px #f04; }
+        #hp-fill { height: 100%; background: #f04; width: 100%; box-shadow: 0 0 10px #f04; }
+        
+        #ult-btn { position: absolute; bottom: 120px; right: 30px; width: 80px; height: 80px; background: rgba(0, 150, 255, 0.3); border: 3px solid #0ff; border-radius: 50%; z-index: 1000; display: none; justify-content: center; align-items: center; font-weight: bold; color: #fff; box-shadow: 0 0 20px #0ff; }
+        #ult-cd { position: absolute; bottom: 0; width: 100%; height: 0%; background: rgba(0,0,0,0.6); border-radius: 50%; transition: height 0.1s; pointer-events: none;}
+        
+        #ult-grid { position: absolute; bottom: 25px; right: 25px; display: none; gap: 15px; z-index: 2000; }
+        .ult-node { width: 70px; height: 70px; background: rgba(0, 0, 0, 0.8); border: 2px solid #fff; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 8px; font-weight: bold; color: #fff; text-align: center; position: relative; overflow: hidden; cursor: pointer; }
+        .cooldown-overlay { position: absolute; bottom: 0; width: 100%; height: 0%; background: rgba(255, 255, 255, 0.4); pointer-events: none; }
+        #btn-void { border-color: #8a2be2; box-shadow: 0 0 15px #8a2be2; }
+        #btn-kame { border-color: #0cf; box-shadow: 0 0 15px #0cf; }
+        #btn-nuke { border-color: #f04; box-shadow: 0 0 15px #f04; }
+
+        #joy-base { position: absolute; bottom: 30px; left: 30px; width: 100px; height: 100px; background: rgba(255,255,255,0.05); border-radius: 50%; z-index: 60; border: 1px solid #444; display: none; }
+        #joy-stick { position: absolute; top: 30px; left: 30px; width: 40px; height: 40px; background: #fff; border-radius: 50%; opacity: 0.2; }
+        #upgrade-menu { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(5, 5, 15, 0.98); padding: 15px; border: 2px solid #f1c40f; z-index: 1100; width: 260px; border-radius: 12px; text-align: center; box-shadow: 0 0 30px #f1c40f; }
+        .card { background: #151515; padding: 10px; border: 1px solid #333; margin-top: 6px; border-radius: 6px; cursor: pointer; text-align: left; font-size: 12px; transition: 0.2s; }
+        .card:hover { border-color: #f1c40f; background: #222; }
+        #game-over { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #game-over h1 { color: #ff0044; font-size: 50px; text-shadow: 0 0 30px #f04; }
+        #game-over button { padding: 15px 40px; background: #f1c40f; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px #f1c40f; }
+    </style>
+</head>
+<body>
+    <div id="rotate"><h2>ROTATE TO LANDSCAPE</h2></div>
+    
+    <div id="main-menu">
+        <h1>POTATO Z:<br>EXECUTIONER</h1>
+        <button class="menu-btn" onclick="startGame()">START GAME</button>
+        <p style="margin-top: 20px; font-size: 12px; color: #888;">LVL 30 ULTS UNLOCKED AT LEVEL 30</p>
+    </div>
+
+    <div id="game-over"><h1>GAME OVER</h1><p id="final-stats"></p><button onclick="location.reload()">RETRY</button></div>
+    <div id="wave-hud">WAVE 1</div>
+    <div id="kill-hud">KILLS: 0<br>NEXT WAVE: 25</div>
+    <button id="fs-btn">FULLSCREEN</button>
+    
+    <div id="hud">
+        <div id="xp-bar"><div id="xp-fill"></div></div>
+        <div id="hp-bar"><div id="hp-fill"></div></div>
+        <div id="lvl-text" style="font-size:12px; margin-top:5px; text-shadow: 0 0 5px #fff;">LVL: 1</div>
+    </div>
+    
+    <div id="ult-btn">ULT<div id="ult-cd"></div></div>
+
+    <div id="ult-grid">
+        <div id="btn-void" class="ult-node">VOID<div class="cooldown-overlay" id="cd-void"></div></div>
+        <div id="btn-kame" class="ult-node">TRUE<br>KAME<div class="cooldown-overlay" id="cd-kame"></div></div>
+        <div id="btn-nuke" class="ult-node">HOLLOW<br>PURPLE<div class="cooldown-overlay" id="cd-nuke"></div></div>
+    </div>
+
+    <div id="joy-base"><div id="joy-stick"></div></div>
+    <div id="upgrade-menu"><h2>SELECT POWER</h2><div id="options-box"></div></div>
+    <canvas id="game"></canvas>
+
+<script>
+    // --- Keyboard Bindings για τα Ultimates ---
+window.addEventListener('keydown', (e) => {
+    // Αν το παιχνίδι είναι σε παύση ή δεν έχει ξεκινήσει, αγνόησε τα πλήκτρα
+    if (paused || !gameStarted) return;
+
+    const key = e.key.toLowerCase();
+
+    // G για το βασικό Spirit Bomb (Ult Button)
+    if (key === 'g') {
+        if (ultCooldown <= 0 && !isChargingUlt) {
+            isChargingUlt = true;
+            chargeTimer = 90;
+        }
+    }
+
+    // Key binds για τα LVL 30 Ultimates (λειτουργούν μόνο αν ο παίκτης είναι LVL >= 30)
+    if (player.lvl >= 30) {
+        if (key === 'q') {
+            // VOID
+            if (specialCDs.void <= 0 && !activeUltMode) {
+                activeUltMode = 'void';
+                modeTimer = 500;
+                specialCDs.void = 2500;
+            }
+        } else if (key === 'e') {
+            // TRUE KAME
+            if (specialCDs.kame <= 0 && !activeUltMode) {
+                activeUltMode = 'kame';
+                modeTimer = 200;
+                specialCDs.kame = 1500;
+            }
+        } else if (key === 'f') {
+            // HOLLOW PURPLE
+            if (specialCDs.nuke <= 0 && !activeUltMode) {
+                activeUltMode = 'nuke';
+                modeTimer = 180;
+                specialCDs.nuke = 3000;
+            }
+        }
+    }
+});
+
+    const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+    const menu = document.getElementById('upgrade-menu'), optionsBox = document.getElementById('options-box');
+    const joyStick = document.getElementById('joy-stick'), ultBtn = document.getElementById('ult-btn'), ultCdOverlay = document.getElementById('ult-cd');
+    const fsBtn = document.getElementById('fs-btn');
+
+    // GAME STATE
+    let gameStarted = false;
+
+    function startGame() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('hud').style.display = 'block';
+        document.getElementById('wave-hud').style.display = 'block';
+        document.getElementById('kill-hud').style.display = 'block';
+        document.getElementById('ult-btn').style.display = 'flex';
+        document.getElementById('joy-base').style.display = 'block';
+        gameStarted = true;
+        animate();
+    }
+
+    fsBtn.onclick = () => { 
+        if (!document.fullscreenElement) { 
+            document.documentElement.requestFullscreen().then(() => {
+                fsBtn.style.display = 'none';
+            }).catch(() => {}); 
+        } 
+    };
+
+    const CAM_ZOOM = 0.08; 
+    let paused = false, frame = 0, moveX = 0, moveY = 0, joyActive = false;
+    let currentWave = 1, kills = 0, totalKills = 0, killsForNextWave = 25;
+    const ARENA_SIZE = 12000;
+    
+    // Skill changed from 'punch' to 'thunder'
+    let player = { x: 0, y: 0, r: 45, speed: 15, xp: 0, hp: 100, maxHp: 100, lvl: 1, damageMul: 2.5, skills: { beam: 1, aura: 0, limit: 0, thunder: 0 } };
+    let enemies = [], gems = [], items = [], slashes = [], projectiles = [], fx = [];
+    let ultCooldown = 0, isChargingUlt = false, chargeTimer = 0;
+
+    let activeUltMode = null, modeTimer = 0;
+    let specialCDs = { void: 0, kame: 0, nuke: 0 };
+
+    // New skill data for Thunder Strike
+    const SKILL_DATA = {
+        beam: { n: "Ki Blasts", e: "Kamehameha", d: "Massive piercing beams." },
+        aura: { n: "Cursed Aura", e: "Malevolent Shrine", d: "Automatic slicing domain." },
+        limit: { n: "Limitless", e: "Hollow Purple", d: "Gravity wells & destruction." },
+        thunder: { n: "Thunder Strike", e: "God of Thunder", d: "Strikes random nearby enemies with lightning." }
+    };
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.onresize = resize; resize();
+
+    ultBtn.addEventListener('click', () => { if(ultCooldown <= 0 && !isChargingUlt) { isChargingUlt = true; chargeTimer = 90; } });
+
+    document.getElementById('btn-void').onclick = () => { if(specialCDs.void <= 0 && !activeUltMode) { activeUltMode = 'void'; modeTimer = 500; specialCDs.void = 2500; }};
+    document.getElementById('btn-kame').onclick = () => { if(specialCDs.kame <= 0 && !activeUltMode) { activeUltMode = 'kame'; modeTimer = 200; specialCDs.kame = 1500; }};
+    document.getElementById('btn-nuke').onclick = () => { if(specialCDs.nuke <= 0 && !activeUltMode) { activeUltMode = 'nuke'; modeTimer = 180; specialCDs.nuke = 3000; }};
+    
+    window.addEventListener('touchstart', e => { 
+        if(!gameStarted) return;
+        let r = document.getElementById('joy-base').getBoundingClientRect();
+        let touch = e.touches[0];
+        if (Math.hypot(touch.clientX - (r.left + 50), touch.clientY - (r.top + 50)) < 70) joyActive = true; 
+    });
+    window.addEventListener('touchmove', e => { 
+        if(!joyActive) return; 
+        let r = document.getElementById('joy-base').getBoundingClientRect(); 
+        let touch = e.touches[0];
+        let dx = touch.clientX - (r.left + 50), dy = touch.clientY - (r.top + 50); 
+        let ang = Math.atan2(dy, dx), dist = Math.min(Math.hypot(dx, dy), 50); 
+        moveX = (Math.cos(ang) * dist) / 50; moveY = (Math.sin(ang) * dist) / 50; 
+        joyStick.style.transform = `translate(${moveX * 30}px, ${moveY * 30}px)`; 
+    });
+    window.addEventListener('touchend', () => { joyActive = false; moveX = moveY = 0; joyStick.style.transform = `translate(0,0)`; });
+
+    function getClosestEnemy() {
+        if (enemies.length === 0) return null;
+        let closest = enemies[0], minDist = 999999;
+        for (let e of enemies) {
+            let d = Math.hypot(player.x - e.x, player.y - e.y);
+            if (d < minDist) { minDist = d; closest = e; }
+        }
+        return closest;
+    }
+
+    function handleLevelUp() {
+        player.lvl++;
+        if(player.lvl >= 30) document.getElementById('ult-grid').style.display = 'flex';
+        let available = Object.keys(SKILL_DATA).filter(k => player.skills[k] < 6);
+        if (available.length === 0) { 
+            player.maxHp += 5; 
+            player.hp = Math.min(player.maxHp, player.hp + 20); 
+            player.damageMul += 0.1;
+        } else {
+            paused = true; menu.style.display = 'block'; optionsBox.innerHTML = '';
+            let keys = available.sort(() => 0.5 - Math.random()).slice(0, 3);
+            keys.forEach(id => {
+                let d = SKILL_DATA[id], lvl = player.skills[id];
+                let div = document.createElement('div'); div.className = 'card';
+                div.innerHTML = `<b>${lvl >= 5 ? d.e : d.n} (Lvl ${lvl+1})</b><p>${d.d}</p>`;
+                div.onclick = () => { player.skills[id]++; paused = false; menu.style.display = 'none'; requestAnimationFrame(animate); };
+                optionsBox.appendChild(div);
+            });
+        }
+    }
+
+    function createExplosion(x, y, color, count, maxSize, isSuper) {
+        for(let i=0; i<count; i++) {
+            fx.push({x, y, vx:(Math.random()-0.5)*(isSuper?250:100), vy:(Math.random()-0.5)*(isSuper?250:100), life:isSuper?80:50, c:color, s:Math.random()*maxSize, fade:true});
+        }
+    }
+
+    function spawnBoss(type) {
+        let ang = Math.random() * Math.PI * 2;
+        let dist = 5000;
+        let hpBase = (100+(player.lvl*40)) * (1 + currentWave * 0.5);
+        if(type === 'mini') {
+            enemies.push({ x: player.x+Math.cos(ang)*dist, y: player.y+Math.sin(ang)*dist, hp: hpBase * 5, r: 250, color: "#8a2be2", isBoss: true, maxHp: hpBase*5 });
+        } else {
+            enemies.push({ x: player.x+Math.cos(ang)*dist, y: player.y+Math.sin(ang)*dist, hp: hpBase * 20, r: 600, color: "#f1c40f", isBoss: true, maxHp: hpBase*20 });
+        }
+    }
+
+    function animate() {
+        if(paused || !gameStarted) return; 
+        frame++;
+
+        for(let k in specialCDs) {
+            if(specialCDs[k] > 0) specialCDs[k]--;
+            let el = document.getElementById('cd-'+k);
+            if(el) el.style.height = (specialCDs[k] / (k==='nuke'?3000:2000)) * 100 + "%";
+        }
+        
+        if(kills >= killsForNextWave) {
+            currentWave++; kills = 0; killsForNextWave = Math.floor(killsForNextWave * 1.8);
+            document.getElementById('wave-hud').innerText = "WAVE " + currentWave;
+        }
+        document.getElementById('kill-hud').innerHTML = `TOTAL KILLS: ${totalKills}<br>WAVE KILLS: ${kills}/${killsForNextWave}`;
+
+        if(ultCooldown > 0) { ultCooldown--; ultCdOverlay.style.height = (ultCooldown/1800)*100 + "%"; }
+        
+        let isSSJ = player.hp < 45;
+        let isUI = player.lvl >= 20;
+        let speed = player.speed * (isUI ? 1.8 : (isSSJ ? 1.4 : 1));
+        let closest = getClosestEnemy();
+        
+        if(isChargingUlt) {
+            speed = 0; chargeTimer--;
+            if(chargeTimer <= 0) {
+                isChargingUlt = false; ultCooldown = 1800;
+                let isSuperNova = player.lvl >= 10;
+                let isWhiteBomb = player.lvl >= 20;
+                let ang = closest ? Math.atan2(closest.y-player.y, closest.x-player.x) : Math.atan2(moveY||-1, moveX);
+                projectiles.push({x: player.x, y: player.y, vx: Math.cos(ang)*20, vy: Math.sin(ang)*20, type: 'ult', life: 200, r: 800, isSN: isSuperNova, isWhite: isWhiteBomb});
+            }
+        }
+
+        player.x += moveX * speed; player.y += moveY * speed;
+        player.x = Math.max(-ARENA_SIZE, Math.min(ARENA_SIZE, player.x));
+        player.y = Math.max(-ARENA_SIZE, Math.min(ARENA_SIZE, player.y));
+
+        // THUNDER STRIKE LOGIC
+        if (player.skills.thunder > 0 && frame % 45 === 0) {
+            let targets = enemies.filter(e => Math.hypot(player.x - e.x, player.y - e.y) < 2500).slice(0, player.skills.thunder);
+            targets.forEach(t => {
+                t.hp -= 500 * player.damageMul;
+                createExplosion(t.x, t.y, "#0ff", 15, 40, false);
+                fx.push({x: t.x, y: t.y, targetX: t.x, targetY: t.y - 3000, life: 10, isThunder: true});
+            });
+        }
+
+        if(closest) {
+            let ang = Math.atan2(closest.y-player.y, closest.x-player.x);
+            if(player.skills.beam >= 6) {
+                enemies.forEach(e => { if(Math.abs(ang - Math.atan2(e.y-player.y, e.x-player.x)) < 0.25 && Math.hypot(e.x-player.x, e.y-player.y) < 9000) e.hp -= 80 * player.damageMul; });
+                ctx.beamAng = ang;
+            } else if(frame % 10 === 0 && !isChargingUlt) {
+                projectiles.push({x:player.x, y:player.y, vx:Math.cos(ang)*80, vy:Math.sin(ang)*80, type:'ki', life:90});
+            }
+        }
+
+        if(player.skills.limit > 0 && player.skills.limit < 6) {
+            let bX = player.x + Math.cos(frame/10)*800, bY = player.y + Math.sin(frame/10)*800;
+            ctx.bluePos = {x:bX, y:bY};
+            enemies.forEach(e => { if(Math.hypot(bX-e.x, bY-e.y)<800) { e.x+=(bX-e.x)*0.25; e.y+=(bY-e.y)*0.25; e.hp-=20*player.damageMul; } });
+            if(frame % 70 === 0 && closest) {
+                let a = Math.atan2(closest.y-player.y, closest.x-player.x);
+                projectiles.push({x:player.x, y:player.y, vx:Math.cos(a)*50, vy:Math.sin(a)*50, type:'red', life:60});
+            }
+        } else if(player.skills.limit >= 6 && frame % 140 === 0 && closest) {
+            let a = Math.atan2(closest.y-player.y, closest.x-player.x);
+            projectiles.push({x:player.x, y:player.y, vx:Math.cos(a)*35, vy:Math.sin(a)*35, type:'purple', life:180});
+        }
+
+        if (activeUltMode) {
+            modeTimer--;
+            if (activeUltMode === 'void') {
+                enemies.forEach(e => { e.frozen = true; e.hp -= 10 * player.damageMul; });
+            }
+            if (activeUltMode === 'kame') {
+                ctx.trueKame = true;
+                enemies.forEach(e => { if(Math.hypot(e.x-player.x, e.y-player.y) < 20000) e.hp -= 200 * player.damageMul; });
+            }
+            if (activeUltMode === 'nuke') {
+                ctx.nukeR = (180 - modeTimer) * 120;
+                enemies.forEach(e => { if(Math.hypot(e.x-player.x, e.y-player.y) < ctx.nukeR) e.hp -= 300 * player.damageMul; });
+            }
+            if (modeTimer <= 0) { enemies.forEach(e => e.frozen = false); activeUltMode = null; ctx.trueKame = false; ctx.nukeR = 0; }
+        }
+
+        projectiles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy;
+            if(p.type === 'ult') {
+                enemies.forEach(e => {
+                    let d = Math.hypot(p.x - e.x, p.y - e.y);
+                    if(d < 5000) { e.x += Math.cos(Math.atan2(p.y-e.y, p.x-e.x))*60; e.y += Math.sin(Math.atan2(p.y-e.y, p.x-e.x))*60; }
+                });
+            }
+            if(p.type === 'purple') enemies.forEach(e => { if(Math.hypot(p.x-e.x, p.y-e.y) < 1200) { e.x+=(p.x-e.x)*0.3; e.y+=(p.y-e.y)*0.3; e.hp -= 50*player.damageMul; } });
+            if(p.type === 'ki') enemies.forEach(e => { if(Math.hypot(p.x-e.x, p.y-e.y) < 250) { e.hp -= 600*player.damageMul; p.life = 0; } });
+            if(p.life-- <= 0) {
+                if(p.type === 'red') createExplosion(p.x, p.y, "#f00", 50, 100);
+                if(p.type === 'purple') createExplosion(p.x, p.y, "#8a2be2", 150, 200);
+                if(p.type === 'ult') { 
+                    createExplosion(p.x, p.y, p.isWhite ? "#fff" : (p.isSN ? "#f1c40f" : "#0af"), 1500, 300, true); 
+                    enemies.forEach(e => { if(Math.hypot(p.x-e.x, p.y-e.y) < (p.isSN ? 18000 : 8000)) e.hp -= 999999; }); 
+                }
+                projectiles.splice(i, 1);
+            }
+        });
+
+        enemies.forEach((e, i) => {
+            if(e.frozen) return;
+            let a = Math.atan2(player.y-e.y, player.x-e.x);
+            let eSpd = (e.isBoss ? 4 : 7) + (currentWave * 0.9);
+            e.x += Math.cos(a)*eSpd; e.y += Math.sin(a)*eSpd;
+            if(Math.hypot(player.x-e.x, player.y-e.y) < (e.r||60)+player.r) {
+                if(isUI && Math.random() < 0.5) {
+                    fx.push({x:player.x, y:player.y, vx:0, vy:0, life:10, c:"rgba(255,255,255,0.3)", s:player.r+10, fade:true});
+                } else {
+                    player.hp -= 1.2;
+                }
+            }
+            if(e.hp <= 0) {
+                kills++; totalKills++;
+                if(totalKills % 100 === 0) spawnBoss('mini');
+                if(totalKills % 500 === 0) spawnBoss('mega');
+                if(Math.random() < 0.05) items.push({x:e.x, y:e.y, type:'heal'});
+                gems.push({x:e.x, y:e.y});
+                enemies.splice(i, 1);
+            }
+        });
+
+        items.forEach((it, i) => {
+            if(Math.hypot(player.x-it.x, player.y-it.y) < 2000) {
+                it.x+=(player.x-it.x)*0.2; it.y+=(player.y-it.y)*0.2;
+                if(Math.hypot(player.x-it.x, player.y-it.y)<100) { player.hp = Math.min(player.maxHp, player.hp + player.maxHp*0.2); items.splice(i, 1); }
+            }
+        });
+
+        gems.forEach((g, i) => {
+            if(Math.hypot(player.x-g.x, player.y-g.y) < 2500) {
+                g.x+=(player.x-g.x)*0.4; g.y+=(player.y-g.y)*0.4;
+                if(Math.hypot(player.x-g.x, player.y-g.y)<120) { 
+                    player.xp+=50; gems.splice(i, 1); 
+                    if(player.xp >= (100 + player.lvl*40)){ player.xp=0; handleLevelUp(); } 
+                }
+            }
+        });
+
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.fillStyle = activeUltMode === 'void' ? '#08001a' : '#020205'; 
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.scale(CAM_ZOOM, CAM_ZOOM);
+        ctx.translate(-player.x + (canvas.width/CAM_ZOOM)/2, -player.y + (canvas.height/CAM_ZOOM)/2);
+
+        ctx.strokeStyle = "#112"; ctx.lineWidth = 15;
+        for(let i = -ARENA_SIZE; i <= ARENA_SIZE; i += 2000) {
+            ctx.beginPath(); ctx.moveTo(i, -ARENA_SIZE); ctx.lineTo(i, ARENA_SIZE); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(-ARENA_SIZE, i); ctx.lineTo(ARENA_SIZE, i); ctx.stroke();
+        }
+
+        if(player.skills.aura > 0) {
+            let isEvo = player.skills.aura >= 6;
+            ctx.shadowBlur = 50; ctx.shadowColor = "#f04";
+            ctx.strokeStyle = isEvo ? "#f00" : "rgba(255,0,0,0.5)"; ctx.lineWidth = 40;
+            ctx.beginPath(); ctx.arc(player.x, player.y, 1100, 0, 7); ctx.stroke();
+            if(frame % (isEvo?2:5) === 0) slashes.push({x:player.x+(Math.random()-0.5)*2200, y:player.y+(Math.random()-0.5)*2200, life:20, c:isEvo?"#f00":"#fff"});
+            slashes.forEach((s, i) => { 
+                ctx.strokeStyle = s.c; ctx.lineWidth = 25;
+                ctx.beginPath(); ctx.moveTo(s.x-200, s.y-60); ctx.lineTo(s.x+200, s.y+60); ctx.stroke();
+                if(s.life-- <=0) slashes.splice(i,1); 
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        if(isChargingUlt) {
+            let r = 250 + (90-chargeTimer)*12;
+            ctx.shadowBlur = 150; ctx.shadowColor = isUI?"#fff":"#0cf"; ctx.fillStyle = isUI?"#fff":"#0cf";
+            ctx.beginPath(); ctx.arc(player.x, player.y - 750, r, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        }
+
+        if(ctx.trueKame) {
+            ctx.shadowBlur = 200; ctx.shadowColor = "#fff"; ctx.strokeStyle = "#fff"; ctx.lineWidth = 2500;
+            ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(player.x + (moveX||1)*25000, player.y + (moveY)*25000); ctx.stroke(); ctx.shadowBlur = 0;
+        }
+        if(ctx.nukeR > 0) {
+            ctx.shadowBlur = 300; ctx.shadowColor = "#8a2be2"; ctx.fillStyle = "rgba(138, 43, 226, 0.7)";
+            ctx.beginPath(); ctx.arc(player.x, player.y, ctx.nukeR, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        }
+
+        if(player.skills.beam >= 6 && !ctx.trueKame) {
+            ctx.shadowBlur=150; ctx.shadowColor="#0ff";
+            ctx.strokeStyle="rgba(0, 200, 255, 0.4)"; ctx.lineWidth=550 + Math.sin(frame/2)*100;
+            ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(player.x+Math.cos(ctx.beamAng)*12000, player.y+Math.sin(ctx.beamAng)*12000); ctx.stroke();
+            ctx.strokeStyle="#fff"; ctx.lineWidth=220;
+            ctx.beginPath(); ctx.moveTo(player.x, player.y); ctx.lineTo(player.x+Math.cos(ctx.beamAng)*12000, player.y+Math.sin(ctx.beamAng)*12000); ctx.stroke();
+            ctx.shadowBlur=0;
+        }
+
+        projectiles.forEach(p => {
+            ctx.shadowBlur = p.isSN ? 250 : 80; ctx.shadowColor = p.type==='red'?"#f00":p.type==='purple'?"#8a2be2":"#0ff";
+            ctx.fillStyle = p.type==='ki'?"#ff0":p.type==='red'?"#f00":p.type==='purple'?"#8a2be2": (p.isWhite ? "#fff" : (p.isSN ? "#f1c40f" : "#0cf"));
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r||(p.type==='purple'?600:80), 0, 7); ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+
+        fx.forEach((f,i) => { 
+            if(f.isThunder) {
+                ctx.strokeStyle = "#0ff"; ctx.lineWidth = 40; ctx.shadowBlur = 50; ctx.shadowColor = "#0ff";
+                ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.targetX, f.targetY); ctx.stroke();
+                ctx.strokeStyle = "#fff"; ctx.lineWidth = 15;
+                ctx.beginPath(); ctx.moveTo(f.x, f.y); ctx.lineTo(f.targetX, f.targetY); ctx.stroke();
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.globalAlpha = f.fade ? f.life/80 : 1;
+                ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(f.x,f.y,f.s,0,7); ctx.fill(); 
+            }
+            f.x+=f.vx; f.y+=f.vy; 
+            ctx.globalAlpha = 1; if(f.life--<=0) fx.splice(i,1); 
+        });
+
+        if(ctx.bluePos && player.skills.limit > 0 && player.skills.limit < 6) {
+            ctx.shadowBlur = 100; ctx.shadowColor = "#00f"; ctx.fillStyle = "#00f";
+            ctx.beginPath(); ctx.arc(ctx.bluePos.x, ctx.bluePos.y, 140, 0, 7); ctx.fill(); ctx.shadowBlur = 0;
+        }
+
+        if(isUI) {
+            ctx.shadowBlur = 100; ctx.shadowColor = "#fff"; ctx.fillStyle = "#fff";
+        } else {
+            ctx.shadowBlur = 60; ctx.shadowColor = isSSJ ? "#f1c40f" : "#d3a625";
+            ctx.fillStyle = isSSJ ? '#f1c40f' : '#d3a625';
+        }
+        ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, 7); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        enemies.forEach(e => { 
+            ctx.fillStyle = e.color || "#f04"; 
+            let r = e.r || 60;
+            ctx.fillRect(e.x-r, e.y-r, r*2, r*2); 
+            if(e.isBoss) {
+                ctx.fillStyle="#000"; ctx.fillRect(e.x-r, e.y-r-120, r*2, 40);
+                ctx.fillStyle="#f04"; ctx.fillRect(e.x-r, e.y-r-120, (r*2) * (e.hp/e.maxHp), 40);
+            }
+        });
+
+        gems.forEach(g => { ctx.fillStyle="#f0f"; ctx.beginPath(); ctx.arc(g.x, g.y, 50, 0, 7); ctx.fill(); });
+        items.forEach(it => { ctx.fillStyle="#0f0"; ctx.beginPath(); ctx.arc(it.x, it.y, 80, 0, 7); ctx.fill(); });
+
+        document.getElementById('xp-fill').style.width = (player.xp / (100+player.lvl*40)) * 100 + "%";
+        document.getElementById('hp-fill').style.width = (player.hp / player.maxHp) * 100 + "%";
+        document.getElementById('lvl-text').innerText = (isUI ? "ULTRA INSTINCT" : "LVL: " + player.lvl);
+
+        if(frame % 8 === 0 && enemies.length < 200 && !activeUltMode) {
+            enemies.push({ x: player.x+(Math.random()-0.5)*20000, y: player.y+(Math.random()-0.5)*20000, hp: (100+(player.lvl*40)) * (1 + currentWave * 0.5) });
+        }
+        if(player.hp <= 0) {
+            paused = true;
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('final-stats').innerText = `KILLS: ${totalKills} | WAVE: ${currentWave} | LVL: ${player.lvl}`;
+            return; 
+        }
+        requestAnimationFrame(animate);
+    }
+    
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+</script>
+</body>
+</html>
